@@ -1,0 +1,17 @@
+{
+  "name": "laboratorio",
+  "version": "0.2.0",
+  "description": "Weekly cap on the Claude subscription quota your unattended sessions may use, WhatsApp alerts, and, as an extra, sessions that close their own PR on green CI.",
+  "author": {
+    "name": "castanys"
+  },
+  "license": "MIT",
+  "keywords": [
+    "quota",
+    "weekly-cap",
+    "whatsapp",
+    "autonomous",
+    "ci",
+    "pull-request"
+  ]
+}

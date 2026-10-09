@@ -1,0 +1,5 @@
+{"five_hour": {"utilization": 17.0, "resets_at": "2026-10-09T07:10:00.178254+00:00", "limit_dollars": null, "used_dollars": null, "remaining_dollars": null, "locked_reason": null},
+ "seven_day": {"utilization": 43.0, "resets_at": "2026-10-11T18:00:00.178275+00:00", "limit_dollars": null, "used_dollars": null, "remaining_dollars": null, "locked_reason": null},
+ "seven_day_opus": null, "seven_day_sonnet": null, "extra_usage": {"is_enabled": false, "monthly_limit": null},
+ "limits": [{"kind": "session", "group": "session", "percent": 17, "resets_at": "2026-10-09T07:10:00.178254+00:00"},
+            {"kind": "weekly_all", "group": "weekly", "percent": 43, "resets_at": "2026-10-11T18:00:00.178275+00:00"}]}

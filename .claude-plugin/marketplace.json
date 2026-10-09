@@ -1,0 +1,16 @@
+{
+  "name": "laboratorio",
+  "owner": {
+    "name": "castanys"
+  },
+  "metadata": {
+    "description": "Guardrails for unattended Claude Code sessions: a weekly cap on the subscription quota and WhatsApp alerts."
+  },
+  "plugins": [
+    {
+      "name": "laboratorio",
+      "source": "./",
+      "description": "Weekly cap on the Claude subscription quota your unattended sessions may use, WhatsApp alerts, and, as an extra, sessions that close their own PR on green CI."
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+#!/bin/sh
+# Without a paid GitHub plan there is no ruleset protecting main; this hook is the barrier.
+# It refuses to update or delete main/master on the remote. Branches and tags pass, and so
+# does the first push of a new repo (main does not exist on the remote yet).
+# Bypass with `git push --no-verify` only when you really mean to rewrite main.
+# It chains to the repo's own pre-push, which core.hooksPath would otherwise skip.
+entrada=$(cat)
+zeros=0000000000000000000000000000000000000000
+printf '%s\n' "$entrada" | while read -r _ local_sha remote_ref remote_sha; do
+    case "$remote_ref" in
+        refs/heads/main|refs/heads/master)
+            [ "$remote_sha" = "$zeros" ] && continue
+            echo "pre-push: ${remote_ref#refs/heads/} is protected: use a branch and a PR (session_close.py)." >&2
+            exit 1 ;;
+    esac
+done || exit 1
+# --git-common-dir, not --git-path: with hooksPath the latter returns this very file, and in
+# a worktree --git-dir has no hooks.
+propio=$(git rev-parse --git-common-dir 2>/dev/null)/hooks/pre-push
+if [ -x "$propio" ] && ! [ "$propio" -ef "$0" ]; then
+    printf '%s\n' "$entrada" | "$propio" "$@"
+fi

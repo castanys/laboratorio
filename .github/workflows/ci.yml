@@ -1,0 +1,22 @@
+name: tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  tests:
+    # The own runner only for this private repo's own branches: a fork's pull request
+    # or the public copy runs on GitHub's runners, never on the machine.
+    runs-on: ${{ (github.event.repository.private && !github.event.pull_request.head.repo.fork) && 'self-hosted' || 'ubuntu-latest' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install test dependencies
+        run: pip install -r requirements.txt
+      - name: Suite
+        run: bash .claude/test.sh
+      - name: Privacy check
+        run: bash scripts/comprueba_privacidad.sh
