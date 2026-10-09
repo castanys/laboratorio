@@ -4,11 +4,13 @@
 The share left to autonomous sessions is `100 - reserve` percent of the weekly quota (the
 rest is yours for working by hand). That share is spread over 7 days, plus a `margin` of
 points for a busier day. The weekly percentage and its renewal time are the ones `/usage`
-shows in Claude Code, read with the login `claude` already keeps (`.credentials.json` in the
-config dir, or the macOS keychain). The token is only sent to that endpoint: never printed
-or stored. `--pct` and `--renews` override the reading.
+shows in Claude Code, fetched with a token you hand over yourself: the `usage_token` option
+Claude Code asks for when the plugin is enabled (it reaches the plugin's processes as
+`CLAUDE_PLUGIN_OPTION_USAGE_TOKEN`) or `--token-cmd`, a command of yours that prints it.
+Nothing is read from the machine's credential store. The token is only sent to that
+endpoint: never printed or stored. `--pct` and `--renews` override the reading.
 
-Usage: weekly_cap.py [--pct 42 --renews 2026-10-11T18:00:00+00:00] [--now ISO] [--reserve 15] [--margin 5]
+Usage: weekly_cap.py [--token-cmd CMD] [--pct 42 --renews 2026-10-11T18:00:00+00:00] [--now ISO] [--reserve 15] [--margin 5]
 Exit 0 if there is room to launch, 1 (with the reason on stdout) if the cap is reached,
 2 if the usage could not be read.
 """
@@ -24,48 +26,28 @@ import urllib.request
 RESERVE = 15
 MARGIN = 5
 URL = "https://api.anthropic.com/api/oauth/usage"
-KEYCHAIN_SERVICE = "Claude Code-credentials"
-UNREADABLE = ("quota: could not read the weekly usage (log in with `claude`, "
-              "or pass --pct and --renews)")
+TOKEN_ENV = "CLAUDE_PLUGIN_OPTION_USAGE_TOKEN"
+UNREADABLE = ("quota: could not read the weekly usage (hand over the token with --token-cmd "
+              "or the plugin's usage_token option, or pass --pct and --renews)")
 
 
-def credentials_path():
-    base = os.environ.get("CLAUDE_CONFIG_DIR") or os.path.join(os.path.expanduser("~"), ".claude")
-    return os.path.join(base, ".credentials.json")
-
-
-def _keychain():
-    """The login JSON on macOS, where `claude` keeps it in the keychain; None elsewhere."""
-    if sys.platform != "darwin":
+def token_from_cmd(cmd):
+    """What a command of the user's prints, stripped; None without a command, on failure or
+    on empty output."""
+    if not cmd:
         return None
     try:
-        r = subprocess.run(["security", "find-generic-password", "-s", KEYCHAIN_SERVICE, "-w"],
-                           capture_output=True, text=True, timeout=10)
+        r = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=30)
     except (OSError, subprocess.SubprocessError):
         return None
-    return r.stdout if r.returncode == 0 else None
+    return (r.stdout.strip() or None) if r.returncode == 0 else None
 
 
-def _token(raw):
-    try:
-        return json.loads(raw)["claudeAiOauth"]["accessToken"]
-    except (ValueError, KeyError, TypeError):
-        return None
-
-
-def _login_token(credentials, keychain):
-    try:
-        with open(credentials or credentials_path(), encoding="utf-8") as f:
-            token = _token(f.read())
-    except OSError:
-        token = None
-    return token or _token(keychain())
-
-
-def read_usage(opener=None, credentials=None, keychain=_keychain):
+def read_usage(opener=None, token=None):
     """`{"seven_day": (pct, renews_iso)}` as `/usage` shows it, or None if it cannot be
-    read (no login, no network, unexpected reply)."""
-    token = _login_token(credentials, keychain)
+    read (no token, no network, unexpected reply). The token is the argument or the plugin
+    option Claude Code exports to the environment."""
+    token = token or os.environ.get(TOKEN_ENV)
     if not token:
         return None
     req = urllib.request.Request(URL, headers={
@@ -115,6 +97,7 @@ def pause_reason(usage, now=None, reserve=RESERVE, margin=MARGIN):
 
 def main(argv=None):
     p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    p.add_argument("--token-cmd", help="command that prints the usage token")
     p.add_argument("--pct", type=float)
     p.add_argument("--renews")
     p.add_argument("--now")
@@ -123,7 +106,8 @@ def main(argv=None):
     a = p.parse_args(argv)
     if (a.pct is None) != (a.renews is None):
         p.error("--pct and --renews go together")
-    usage = {"seven_day": (a.pct, a.renews)} if a.pct is not None else read_usage()
+    usage = ({"seven_day": (a.pct, a.renews)} if a.pct is not None
+             else read_usage(token=token_from_cmd(a.token_cmd)))
     if not usage:
         print(UNREADABLE)
         return 2

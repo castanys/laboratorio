@@ -67,7 +67,7 @@ def test_main_reads_the_quota_when_no_pct_is_given(tmp_path, monkeypatch):
     (tmp_path / "STATUS.md").write_text(STATUS)
     seen = []
     monkeypatch.setattr(sp.weekly_cap, "read_usage",
-                        lambda: {"seven_day": (99.0, "2099-01-01T00:00:00+00:00")})
+                        lambda token=None: {"seven_day": (99.0, "2099-01-01T00:00:00+00:00")})
     monkeypatch.setattr(sp, "run_pass", lambda repo, usage: seen.append(usage) or "paused")
     sp.main([str(tmp_path)])
     assert seen == [{"seven_day": (99.0, "2099-01-01T00:00:00+00:00")}]

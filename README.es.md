@@ -30,10 +30,10 @@ El clon es donde viven los scripts, en una ruta que no cambia entre versiones (c
 
 ## Uso
 
-**Tope.** Con la sesión de `claude` iniciada en la misma máquina:
+**Tope.** El porcentaje de la semana y la hora de renovación salen del mismo punto que usa `/usage`, con un token que entregas tú: el plugin nunca lee el almacén de credenciales de tu máquina. El token es el de OAuth de tu sesión de `claude`. Al activar el plugin, Claude Code te lo pide (`usage_token`, guardado en su almacén seguro y pasado a los procesos del plugin como `CLAUDE_PLUGIN_OPTION_USAGE_TOKEN`). Desde cron, dale un comando tuyo que imprima el actual (rota, así que no una copia pegada):
 
 ```sh
-python3 ~/laboratorio/scripts/weekly_cap.py && echo "hay sitio para lanzar"
+python3 ~/laboratorio/scripts/weekly_cap.py --token-cmd 'tu-comando-que-lo-imprime' && echo "hay sitio para lanzar"
 ```
 
 Imprime el porcentaje de la semana, el tope de hoy y la hora de renovación. Por defecto `--reserve 15` (se te guarda a ti) y `--margin 5`; `--pct 42 --renews 2026-10-11T18:00:00+00:00` sustituye la lectura. Ponlo delante de lo que lance tus sesiones (cron, un script, `session_pass.py`).
@@ -52,7 +52,7 @@ GOAL: una frase
 
 (Las cabeceras van en inglés, `GOAL`, `OPEN`, `DECISIONS`, `DONE`, para que el validador sea el mismo en todos los idiomas.)
 
-- `python3 ~/laboratorio/scripts/session_pass.py REPO` lanza una pasada si el tope semanal lo permite (y ninguna si no puede leer la cuota).
+- `python3 ~/laboratorio/scripts/session_pass.py REPO --token-cmd 'tu-comando-que-lo-imprime'` lanza una pasada si el tope semanal lo permite (y ninguna si no puede leer la cuota).
 - `/laboratorio:close ITEM-ID "feat: título"` cierra la tarea que acabas de terminar.
 - `/laboratorio:check-status` valida `STATUS.md`.
 

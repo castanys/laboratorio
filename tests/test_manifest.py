@@ -1,5 +1,6 @@
 import json
 import os
+import struct
 import re
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -61,3 +62,27 @@ def test_readme_commands_run_from_any_repo():
             for path in re.findall(r"(\S*scripts/\S+\.(?:py|sh))", cmd):
                 assert path.startswith(CLONE + "/scripts/"), f"{name}: {cmd}"
                 assert os.path.exists(os.path.join(ROOT, path[len(CLONE) + 1:])), path
+
+
+# 2026-10-09 (LAB-09): the directory's validation of castanys/laboratorio@main warned
+# "No icon" (the first save fixes the listing icon for good: square PNG, 512-2048 px, under
+# 2 MB) and held the submission for "Uses a credential from the user's machine" asking for a
+# user_config option with sensitive: true. Expected: a square PNG at the path `icon` names,
+# and the token declared as a sensitive option.
+def test_manifest_icon_is_a_square_png_within_the_directory_limits():
+    plugin = json.load(open(os.path.join(ROOT, ".claude-plugin", "plugin.json")))
+    assert plugin["icon"].startswith("./")
+    path = os.path.join(ROOT, plugin["icon"])
+    assert os.path.getsize(path) < 2 * 1024 * 1024
+    with open(path, "rb") as f:
+        head = f.read(24)
+    assert head[:8] == b"\x89PNG\r\n\x1a\n"
+    width, height = struct.unpack(">II", head[16:24])
+    assert width == height and 512 <= width <= 2048
+
+
+def test_manifest_asks_for_the_usage_token_instead_of_reading_it():
+    plugin = json.load(open(os.path.join(ROOT, ".claude-plugin", "plugin.json")))
+    option = plugin["userConfig"]["usage_token"]
+    assert option["type"] == "string" and option["sensitive"] is True
+    assert option["title"] and option["description"]
