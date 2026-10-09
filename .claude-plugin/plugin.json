@@ -1,10 +1,14 @@
 {
   "name": "laboratorio",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Weekly cap on the Claude subscription quota your unattended sessions may use, WhatsApp alerts, and, as an extra, sessions that close their own PR on green CI.",
   "author": {
     "name": "castanys"
   },
+  "repository": "https://github.com/castanys/laboratorio",
+  "documentationUrl": "https://github.com/castanys/laboratorio#readme",
+  "supportUrl": "https://github.com/castanys/laboratorio/issues",
+  "icon": "./.claude-plugin/icon.png",
   "license": "MIT",
   "keywords": [
     "quota",
@@ -13,5 +17,13 @@
     "autonomous",
     "ci",
     "pull-request"
-  ]
+  ],
+  "userConfig": {
+    "usage_token": {
+      "type": "string",
+      "title": "Usage token",
+      "description": "Token the weekly cap sends to the usage endpoint to read the week's percentage: the OAuth token of your claude login. You hand it over here; the plugin never reads it from your machine, prints it or stores it.",
+      "sensitive": true
+    }
+  }
 }

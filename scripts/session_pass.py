@@ -4,13 +4,14 @@
 Launchable means the item carries `[origin human]`, `[origin plan]` or `[origin failure]`
 (an item without origin is `auto` and never launched: sessions inventing and scoring their
 own work is where unattended spend goes) and does not wait for a date (`(since YYYY-MM-DD)`).
-Before launching it checks the weekly cap (weekly_cap.py, which reads the quota from the
-`claude` login unless --pct and --renews are given; unreadable means no launch); each pass
-runs in its own git worktree from origin/main with a USD ceiling. The session ends with a last line
-`DONE: …`, `ASK [kind]: …` or `BLOCKED: …`; anything but DONE is sent to WhatsApp
-(notify_whatsapp.py) if it is configured.
+Before launching it checks the weekly cap (weekly_cap.py, which reads the quota with the
+token you hand over through --token-cmd or the plugin's usage_token option, unless --pct and
+--renews are given; unreadable means no launch); each pass runs in its own git worktree from
+origin/main with a USD ceiling. The session ends with a last line `DONE: …`, `ASK [kind]: …`
+or `BLOCKED: …`; anything but DONE is sent to WhatsApp (notify_whatsapp.py) if it is
+configured.
 
-Usage: session_pass.py [REPO] [--model sonnet] [--budget 8] [--pct N --renews ISO]
+Usage: session_pass.py [REPO] [--token-cmd CMD] [--pct N --renews ISO]
 """
 import argparse
 import datetime as dt
@@ -98,11 +99,13 @@ def run_pass(repo, usage=None, launch=launch, notify=_notify, today=None):
 def main(argv=None):
     p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     p.add_argument("repo", nargs="?", default=".")
+    p.add_argument("--token-cmd", help="command that prints the usage token")
     p.add_argument("--pct", type=float)
     p.add_argument("--renews")
     a = p.parse_args(argv)
+    handed = weekly_cap.token_from_cmd(a.token_cmd)
     usage = ({"seven_day": (a.pct, a.renews)} if a.pct is not None and a.renews
-             else weekly_cap.read_usage())
+             else weekly_cap.read_usage(token=handed))
     print(run_pass(os.path.abspath(a.repo), usage))
     return 0
 

@@ -30,10 +30,10 @@ The clone is where the scripts live, at a path that does not change between vers
 
 ## Use
 
-**Cap.** Logged in with `claude` on the same machine:
+**Cap.** The week's percentage and renewal time come from the same endpoint `/usage` uses, fetched with a token you hand over yourself: the plugin never reads your machine's credential store. The token is the OAuth token of your `claude` login. When you enable the plugin, Claude Code asks for it (`usage_token`, kept in its secure store and passed to the plugin's processes as `CLAUDE_PLUGIN_OPTION_USAGE_TOKEN`). From cron, give it a command of yours that prints the current one (it rotates, so not a pasted copy):
 
 ```sh
-python3 ~/laboratorio/scripts/weekly_cap.py && echo "room to launch"
+python3 ~/laboratorio/scripts/weekly_cap.py --token-cmd 'your-command-that-prints-it' && echo "room to launch"
 ```
 
 It prints the week's percentage, today's cap and the renewal time. Defaults: `--reserve 15` (kept for you), `--margin 5`; `--pct 42 --renews 2026-10-11T18:00:00+00:00` overrides the reading. Put it in front of whatever launches your sessions (cron, a script, `session_pass.py`).
@@ -50,7 +50,7 @@ GOAL: one sentence
 ## DONE (0)
 ```
 
-- `python3 ~/laboratorio/scripts/session_pass.py REPO` runs one pass if the weekly cap allows (and none if the quota cannot be read).
+- `python3 ~/laboratorio/scripts/session_pass.py REPO --token-cmd 'your-command-that-prints-it'` runs one pass if the weekly cap allows (and none if the quota cannot be read).
 - `/laboratorio:close ITEM-ID "feat: title"` closes the task you just finished.
 - `/laboratorio:check-status` validates `STATUS.md`.
 
